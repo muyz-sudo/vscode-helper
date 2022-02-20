@@ -13,7 +13,7 @@ pub struct Opts {
     /// The folder where the download extension is placed
     #[clap(short, long, parse(try_from_str = parse_dir))]
     pub dir: Option<PathBuf>,
-    /// Only save extension list to 'vscode-extensions.lis' at current dir
+    /// Only save extension list to './vscode-extensions.lis'
     #[clap(short, long, exclusive(true))]
     pub save_only: bool,
 }
