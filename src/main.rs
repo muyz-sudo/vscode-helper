@@ -1,12 +1,15 @@
 use anyhow::Result;
-use std::path::Path;
 use clap::Parser;
-use tokio::{fs::OpenOptions, io::{AsyncBufReadExt, BufReader}};
+use std::path::{Path, PathBuf};
+use tokio::{
+    fs::OpenOptions,
+    io::{AsyncBufReadExt, BufReader},
+};
 
 mod engine;
-use engine::extension::ExtensionInfo;
-use engine::downloader::Downloader;
 use engine::cli;
+use engine::downloader::Downloader;
+use engine::extension::ExtensionInfo;
 
 // 从文件读取扩展
 async fn read_lines<P: AsRef<Path>>(path: P) -> Result<Vec<ExtensionInfo>> {
@@ -15,7 +18,8 @@ async fn read_lines<P: AsRef<Path>>(path: P) -> Result<Vec<ExtensionInfo>> {
     let mut lines = reader.lines();
     let mut res = Vec::new();
     while let Some(line) = lines.next_line().await? {
-        if ! &line.is_empty() { // 不处理空白行
+        // 不处理空白行
+        if !&line.is_empty() {
             match ExtensionInfo::try_from(line.as_str()) {
                 Ok(ext) => res.push(ext),
                 Err(e) => println!("{}", e.to_string()),
@@ -26,12 +30,13 @@ async fn read_lines<P: AsRef<Path>>(path: P) -> Result<Vec<ExtensionInfo>> {
 }
 
 // 下载动作
-async fn download(ext: &ExtensionInfo) -> Result<()> {
+async fn download(ext: &ExtensionInfo, out: &PathBuf) -> Result<()> {
     let url = &ext.get_url().unwrap();
     let filename = &ext.get_filename().unwrap();
-    // println!("{:?}", &url);
+    let mut output = PathBuf::clone(out);
+    output.push(filename);
 
-    let downloader = Downloader::new(&url, Some(&filename), None);
+    let downloader = Downloader::new(&url, Some(&output.to_str().unwrap()), None);
     downloader.download_async().await
 }
 
@@ -42,7 +47,8 @@ fn get_extensions_from_vscode() -> Result<Vec<ExtensionInfo>> {
     let ext_list = cli::parse_excmd_res(&ext_list_str)?;
     let mut extensions = Vec::new();
     for ext in ext_list {
-        if ! ext.is_empty() { // 不处理空白行
+        // 不处理空白行
+        if !ext.is_empty() {
             match ExtensionInfo::try_from(ext) {
                 Ok(ext) => extensions.push(ext),
                 Err(e) => println!("{}", e.to_string()),
@@ -54,24 +60,39 @@ fn get_extensions_from_vscode() -> Result<Vec<ExtensionInfo>> {
 
 // 从Vscode保存已安装插件到文件
 fn save_extensions_from_vscode() -> Result<String> {
-    let cmd_str = String::from("code --list-extensions --show-versions >> vscode-extensions.lis");
+    let cmd_str = String::from("code --list-extensions --show-versions > vscode-extensions.lis");
     cli::excute_command(&cmd_str)
 }
 
+/// # Examples
+/// 
+/// ```bash
+/// vsed -s
+/// vsed -f
+/// vsed -d
+/// vsed -f -d
+/// ```
 #[tokio::main]
-async fn main(){
+async fn main() {
     let opts: cli::Opts = cli::Opts::parse();
     if opts.save_only {
-        save_extensions_from_vscode().unwrap();
+        match save_extensions_from_vscode() {
+            Ok(_) => {
+                println!("A list of installed extensions has been saved to ./vscode-extensions.lis")
+            }
+            Err(e) => println!("{}", e.to_string()),
+        }
     } else {
         let extensions = match &opts.file {
-            Some(file) => read_lines(file).await.unwrap(),
+            Some(file) => read_lines(&file).await.unwrap(),
             None => get_extensions_from_vscode().unwrap(),
         };
 
+        let out_dir = opts.dir.unwrap_or(PathBuf::new());
+
         for extension in extensions {
-            match download(&extension).await {
-                Ok(_) => println!("{} 下载成功", &extension.name),
+            match download(&extension, &out_dir).await {
+                Ok(_) => println!("下载成功 {} ", &extension.name),
                 Err(e) => println!("下载失败: {}", e),
             }
         }
@@ -92,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn read_lines_works(){
+    fn read_lines_works() {
         let path = PathBuf::from("/Users/wuaq/Desktop/vs_code_extensions_list.txt");
         let extensions = aw!(read_lines(path));
         for extension in &extensions {
@@ -102,12 +123,12 @@ mod tests {
     }
 
     #[test]
-    fn download_works(){
+    fn download_works() {
         let ext = ExtensionInfo {
             author: String::from("bungcip"),
             name: String::from("better-toml"),
             version: String::from("0.3.2"),
         };
-        assert!(aw!(download(&ext)).is_ok());
+        assert!(aw!(download(&ext, &PathBuf::from("./test/"))).is_ok());
     }
 }

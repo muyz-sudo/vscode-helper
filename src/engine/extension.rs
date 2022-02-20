@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use regex::Regex;
 use std::convert::TryFrom;
 
@@ -16,7 +16,10 @@ pub struct ExtensionInfo {
 /// 让 ExtensionInfo 可以生产一个字符串
 impl From<&ExtensionInfo> for String {
     fn from(ext: &ExtensionInfo) -> Self {
-        format!("author: {}, name: {}, version: {}", ext.author, ext.name, ext.version)
+        format!(
+            "author: {}, name: {}, version: {}",
+            ext.author, ext.name, ext.version
+        )
     }
 }
 
@@ -45,7 +48,10 @@ impl ExtensionInfo {
 
     /// 获取文件名
     pub fn get_filename(&self) -> Result<String> {
-        Ok(format!("{}.{}-{}.vsix", &self.author, &self.name, &self.version))
+        Ok(format!(
+            "{}.{}-{}.vsix",
+            &self.author, &self.name, &self.version
+        ))
     }
 }
 
@@ -64,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn extension_try_from_works(){
+    fn extension_try_from_works() {
         let s = String::from("2gua.rainbow-brackets@0.0.6");
         let ext = ExtensionInfo::try_from(s.as_str()).unwrap();
         println!("{:?}", ext);
