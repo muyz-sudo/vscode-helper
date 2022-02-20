@@ -18,3 +18,9 @@ indicatif = "0.16.2" # 控制台进度条
 
 [dev-dependencies]
 tokio-test = "0.4.2" # 异步测试
+
+[profile.release]
+opt-level = "z"  # Optimize for size.
+lto = true # Enable Link Time Optimization
+codegen-units = 1 # Specify 1 parallel codegen unit
+panic = "abort" # No traceback information is generated
