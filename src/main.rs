@@ -65,7 +65,7 @@ fn save_extensions_from_vscode() -> Result<String> {
 }
 
 /// # Examples
-/// 
+///
 /// ```bash
 /// vsed -s
 /// vsed -f
