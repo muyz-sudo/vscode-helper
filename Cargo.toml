@@ -2,8 +2,9 @@
 name = "vscode-helper"
 version = "1.0.0"
 edition = "2021"
-authors = ["Anquan Wu <hi@wuaq.cn>"]
+authors = ["wuaq <hi@wuaq.cn>"]
 description = "A Visual Studio Code Helper."
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
