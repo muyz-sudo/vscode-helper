@@ -125,10 +125,10 @@ mod tests {
     #[test]
     fn download_works() {
         let ext = ExtensionInfo {
-            author: String::from("bungcip"),
-            name: String::from("better-toml"),
-            version: String::from("0.3.2"),
+            author: String::from("ms-vscode-remote"),
+            name: String::from("remote-ssh"),
+            version: String::from("0.82.1"),
         };
-        assert!(aw!(download(&ext, &PathBuf::from("./test/"))).is_ok());
+        assert!(aw!(download(&ext, &PathBuf::from("./"))).is_ok());
     }
 }
